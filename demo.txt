@@ -1,0 +1,28 @@
+For Windows:
+Create a Batch Script to Run the Application:
+
+Create a batch file (e.g., startMyApp.bat) with the following content:
+batch
+
+@echo off
+cd C:\path\to\your\jar\directory
+java -jar your-application.jar
+Save it in a specific folder like C:\Scripts.
+Create a Task to Run the Batch File at Startup:
+
+Press Win + R, type taskschd.msc to open Task Scheduler.
+Click Create Task on the right-hand side.
+In the General tab, name your task (e.g., Start MyApp).
+In the Triggers tab, click New, then select Begin the task: At startup.
+In the Actions tab, click New, then browse to your batch file (C:\Scripts\startMyApp.bat) and select it.
+In the Conditions tab, uncheck Start the task only if the computer is on AC power if necessary.
+In the Settings tab, check Allow task to be run on demand and If the task fails, restart every with appropriate settings.
+Click OK to save the task.
+Reboot to Test:
+
+Restart your computer, and the application should run automatically on startup.
+Additional Considerations:
+Run as a specific user: Ensure the application runs as the user with the correct permissions to access required files and resources.
+Logging: Ensure that your application writes logs somewhere persistent for debugging. You can redirect output to log files or set up specific logging configurations.
+Auto-restart: The Restart=on-failure option in the Linux service file ensures that your application will automatically restart if it crashes.
+After following these steps, your application should automatically run when your computer starts up.
