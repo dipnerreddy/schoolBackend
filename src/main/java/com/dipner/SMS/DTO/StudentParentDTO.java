@@ -3,7 +3,6 @@ package com.dipner.SMS.DTO;
 import java.time.LocalDate;
 
 public class StudentParentDTO {
-    private Long parentId;
     private String studentName;
     private LocalDate dob;
     private int admissionYear;
@@ -11,15 +10,12 @@ public class StudentParentDTO {
     private boolean stillStudying;
     private String gender;
 
-    // Getters and Setters
+    private String parentName;
+    private String parentPhoneNumber;
+    private String parentAddress;
 
-    public Long getParentId() {
-        return parentId;
-    }
+    // Getters and setters
 
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
-    }
 
     public String getStudentName() {
         return studentName;
@@ -67,5 +63,29 @@ public class StudentParentDTO {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public String getParentName() {
+        return parentName;
+    }
+
+    public void setParentName(String parentName) {
+        this.parentName = parentName;
+    }
+
+    public String getParentPhoneNumber() {
+        return parentPhoneNumber;
+    }
+
+    public void setParentPhoneNumber(String parentPhoneNumber) {
+        this.parentPhoneNumber = parentPhoneNumber;
+    }
+
+    public String getParentAddress() {
+        return parentAddress;
+    }
+
+    public void setParentAddress(String parentAddress) {
+        this.parentAddress = parentAddress;
     }
 }
