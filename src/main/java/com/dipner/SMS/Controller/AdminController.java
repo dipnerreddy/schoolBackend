@@ -322,5 +322,7 @@ public class AdminController {
 more updates in future,
 
 1) in collect fee, add method of payment, [upi,cash, card] [done]
-2)
+2) change to parent number from parent id while adding a student.
+3) in super admin, add class in ui [ temperoroly adjested using postman in school system. ]
+4)
  */
