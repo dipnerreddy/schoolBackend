@@ -117,6 +117,7 @@ public class AdminController {
         parentRepository.save(parent);
 
         // Handle bus student creation if comesByBus is true
+        // Handle bus student creation if comesByBus is true
         if (studentParentDTO.isComesByBus()) {
             BusDetails busDetails = busDetailsRepository.findByBusNumber(studentParentDTO.getBusNumber());
             if (busDetails != null) {
@@ -124,15 +125,21 @@ public class AdminController {
                 BusStudent busStudent = new BusStudent();
                 busStudent.setStudentName(student.getStudentName());
                 busStudent.setMobileNumber(parent.getPhoneNumber());
-                busStudent.setRemainingBalance(busDetails.getBusFee());
+                busStudent.setRemainingBalance(busDetails.getBusFee()); // Use bus fee as the initial balance
                 busStudent.setBusNumber(studentParentDTO.getBusNumber());
 
                 // Save the bus student
                 busStudentRepository.save(busStudent);
+
+                // Update the total_pending_fee and total_students in busDetails
+                busDetails.setTotalPendingFee(busDetails.getTotalPendingFee() + busDetails.getBusFee());
+                busDetails.setTotalStudents(busDetails.getTotalStudents() + 1);
+                busDetailsRepository.save(busDetails); // Save updated bus details
             } else {
                 return ResponseEntity.badRequest().body("Bus Not Found");
             }
         }
+
 
         log.info("Student added successfully: " + student.getStudentName());
 
