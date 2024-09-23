@@ -2,15 +2,9 @@ package com.dipner.SMS.Controller;
 
 import com.dipner.SMS.DOA.CollectFeeDOA;
 import com.dipner.SMS.DTO.*;
-import com.dipner.SMS.Entity.Parent;
-import com.dipner.SMS.Entity.SchoolClass;
-import com.dipner.SMS.Entity.Student;
-import com.dipner.SMS.Entity.User;
+import com.dipner.SMS.Entity.*;
 import com.dipner.SMS.Logs.CollectFeeLog;
-import com.dipner.SMS.Repository.CollectFeeLogRepository;
-import com.dipner.SMS.Repository.ParentRepository;
-import com.dipner.SMS.Repository.SchoolClassRepository;
-import com.dipner.SMS.Repository.StudentRepository;
+import com.dipner.SMS.Repository.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +24,8 @@ import java.util.Map;
 public class AdminController {
 
     static Log log = LogFactory.getLog(Student.class.getName());
+    @Autowired
+    private BusDetailsRepository busDetailsRepository;
     @Autowired
     private CollectFeeLogRepository collectFeeLogRepository;
 
@@ -385,6 +381,15 @@ public class AdminController {
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
+
+
+    // POST method to add BusDetails with ResponseEntity.ok
+    @PostMapping("/addBusDetails")
+    public ResponseEntity<BusDetails> addBusDetails(@RequestBody BusDetails busDetails) {
+        BusDetails savedBusDetails = busDetailsRepository.save(busDetails);
+        return ResponseEntity.ok(savedBusDetails); // Returning ResponseEntity.ok
+    }
+
 }
 
 
