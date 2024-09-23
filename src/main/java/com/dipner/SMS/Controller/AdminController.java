@@ -58,31 +58,22 @@ public class AdminController {
         }
     }
 
-    // Endpoint to add a new parent
-    // Endpoint to add a new parent
-    @PostMapping("/addParent")
-    public ResponseEntity<String> addParent(@RequestBody Parent parent) {
-        // Check if the parent already exists by phone number
-        Parent existingParent = parentRepository.findByPhoneNumber(parent.getPhoneNumber());
-        if (existingParent != null) {
-            return ResponseEntity.badRequest().body("A parent is already present with this phone number.");
-        }
-
-        // Save the new parent
-        parentRepository.save(parent);
-        return ResponseEntity.ok("Parent added successfully." +parent.getId());
-    }
-
-
-    // Endpoint to add a student
     @PostMapping("/addStudent")
-    public ResponseEntity<String> addStudent(@RequestBody StudentParentDTO studentParentDTO) {
-        Long parentId = studentParentDTO.getParentId();
-        Parent parent = parentRepository.findById(parentId).orElse(null);
+    public ResponseEntity<String> addStudentWithParent(@RequestBody StudentParentDTO studentParentDTO) {
+        // Check if the parent already exists by phone number
+        String parentPhoneNumber = studentParentDTO.getParentPhoneNumber();
+        Parent parent = parentRepository.findByPhoneNumber(parentPhoneNumber);
+
         if (parent == null) {
-            return ResponseEntity.badRequest().body("Parent Not Found");
+            // Parent does not exist, create a new parent
+            parent = new Parent();
+            parent.setParentName(studentParentDTO.getParentName());
+            parent.setPhoneNumber(parentPhoneNumber);
+            parent.setAddress(studentParentDTO.getParentAddress());
+            parentRepository.save(parent); // Save the new parent
         }
 
+        // Now that we have the parent (either existing or newly created), create and add the student
         Student student = new Student();
         student.setStudentName(studentParentDTO.getStudentName());
         student.setDob(studentParentDTO.getDob());
@@ -91,7 +82,7 @@ public class AdminController {
         student.setStillStudying(studentParentDTO.isStillStudying());
         student.setGender(studentParentDTO.getGender());
 
-        // Calculate age based on DOB
+        // Calculate the student's age based on DOB
         LocalDate dob = studentParentDTO.getDob();
         if (dob != null) {
             int age = Period.between(dob, LocalDate.now()).getYears();
@@ -100,9 +91,10 @@ public class AdminController {
             student.setAge(0);
         }
 
-        // Set parent and class details
+        // Associate the student with the parent
         student.setParent(parent);
 
+        // Find the class by class name and associate it with the student
         SchoolClass schoolClass = schoolClassRepository.findByClassName(studentParentDTO.getCurrentClass());
         if (schoolClass != null) {
             student.setSchoolClass(schoolClass); // Assign school class to student
@@ -114,12 +106,90 @@ public class AdminController {
             return ResponseEntity.badRequest().body("Class Not Found");
         }
 
-        // Save the student
+        // Save the student entity
         studentRepository.save(student);
+
+        // If the parent is new, also add the student to the parent's list of children
+        if (parent.getChildren() == null) {
+            parent.setChildren(new ArrayList<>());
+        }
+        parent.getChildren().add(student);
+
+        // Save the parent again to ensure the student is linked in the parent's children list
+        parentRepository.save(parent);
+
         log.info("Student added successfully: " + student.getStudentName());
 
-        return ResponseEntity.ok("Student Saved Successfully");
+        return ResponseEntity.ok("Student and Parent added/linked successfully.");
     }
+
+
+
+
+
+
+    // Endpoint to add a new parent
+    // Endpoint to add a new parent
+//    @PostMapping("/addParent")
+//    public ResponseEntity<String> addParent(@RequestBody Parent parent) {
+//        // Check if the parent already exists by phone number
+//        Parent existingParent = parentRepository.findByPhoneNumber(parent.getPhoneNumber());
+//        if (existingParent != null) {
+//            return ResponseEntity.badRequest().body("A parent is already present with this phone number.");
+//        }
+//
+//        // Save the new parent
+//        parentRepository.save(parent);
+//        return ResponseEntity.ok("Parent added successfully." +parent.getId());
+//    }
+
+
+    // Endpoint to add a student
+//    @PostMapping("/addStudent")
+//    public ResponseEntity<String> addStudent(@RequestBody StudentParentDTO studentParentDTO) {
+//        Long parentId = studentParentDTO.getParentId();
+//        Parent parent = parentRepository.findById(parentId).orElse(null);
+//        if (parent == null) {
+//            return ResponseEntity.badRequest().body("Parent Not Found");
+//        }
+//
+//        Student student = new Student();
+//        student.setStudentName(studentParentDTO.getStudentName());
+//        student.setDob(studentParentDTO.getDob());
+//        student.setAdmissionYear(studentParentDTO.getAdmissionYear());
+//        student.setCurrentClass(studentParentDTO.getCurrentClass());
+//        student.setStillStudying(studentParentDTO.isStillStudying());
+//        student.setGender(studentParentDTO.getGender());
+//
+//        // Calculate age based on DOB
+//        LocalDate dob = studentParentDTO.getDob();
+//        if (dob != null) {
+//            int age = Period.between(dob, LocalDate.now()).getYears();
+//            student.setAge(age);
+//        } else {
+//            student.setAge(0);
+//        }
+//
+//        // Set parent and class details
+//        student.setParent(parent);
+//
+//        SchoolClass schoolClass = schoolClassRepository.findByClassName(studentParentDTO.getCurrentClass());
+//        if (schoolClass != null) {
+//            student.setSchoolClass(schoolClass); // Assign school class to student
+//            student.setFee(schoolClass.getFees());
+//            schoolClass.setTotalStrength(schoolClass.getTotalStrength() + 1);
+//            schoolClass.setTotalPendingFee(schoolClass.getTotalPendingFee() + schoolClass.getFees());
+//            schoolClassRepository.save(schoolClass); // Save updated class
+//        } else {
+//            return ResponseEntity.badRequest().body("Class Not Found");
+//        }
+//
+//        // Save the student
+//        studentRepository.save(student);
+//        log.info("Student added successfully: " + student.getStudentName());
+//
+//        return ResponseEntity.ok("Student Saved Successfully");
+//    }
 
 
     // Endpoint to create a class
@@ -322,7 +392,7 @@ public class AdminController {
 more updates in future,
 
 1) in collect fee, add method of payment, [upi,cash, card] [done]
-2) change to parent number from parent id while adding a student.
+2) change to parent number from parent id while adding a student. [sloved]
 3) in super admin, add class in ui [ temperoroly adjested using postman in school system. ]
 4)
  */
