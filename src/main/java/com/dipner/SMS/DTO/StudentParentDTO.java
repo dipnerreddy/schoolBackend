@@ -3,19 +3,42 @@ package com.dipner.SMS.DTO;
 import java.time.LocalDate;
 
 public class StudentParentDTO {
+    private String parentName;
+    private String parentPhoneNumber;
+    private String parentAddress;
     private String studentName;
     private LocalDate dob;
     private int admissionYear;
     private String currentClass;
     private boolean stillStudying;
     private String gender;
+    private boolean comesByBus; // New field
+    private String busNumber;   // New field
 
-    private String parentName;
-    private String parentPhoneNumber;
-    private String parentAddress;
+    // Getters and Setters
+    public String getParentName() {
+        return parentName;
+    }
 
-    // Getters and setters
+    public void setParentName(String parentName) {
+        this.parentName = parentName;
+    }
 
+    public String getParentPhoneNumber() {
+        return parentPhoneNumber;
+    }
+
+    public void setParentPhoneNumber(String parentPhoneNumber) {
+        this.parentPhoneNumber = parentPhoneNumber;
+    }
+
+    public String getParentAddress() {
+        return parentAddress;
+    }
+
+    public void setParentAddress(String parentAddress) {
+        this.parentAddress = parentAddress;
+    }
 
     public String getStudentName() {
         return studentName;
@@ -65,27 +88,19 @@ public class StudentParentDTO {
         this.gender = gender;
     }
 
-    public String getParentName() {
-        return parentName;
+    public boolean isComesByBus() {
+        return comesByBus;
     }
 
-    public void setParentName(String parentName) {
-        this.parentName = parentName;
+    public void setComesByBus(boolean comesByBus) {
+        this.comesByBus = comesByBus;
     }
 
-    public String getParentPhoneNumber() {
-        return parentPhoneNumber;
+    public String getBusNumber() {
+        return busNumber;
     }
 
-    public void setParentPhoneNumber(String parentPhoneNumber) {
-        this.parentPhoneNumber = parentPhoneNumber;
-    }
-
-    public String getParentAddress() {
-        return parentAddress;
-    }
-
-    public void setParentAddress(String parentAddress) {
-        this.parentAddress = parentAddress;
+    public void setBusNumber(String busNumber) {
+        this.busNumber = busNumber;
     }
 }

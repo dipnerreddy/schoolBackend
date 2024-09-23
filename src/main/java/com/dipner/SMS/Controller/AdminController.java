@@ -40,6 +40,8 @@ public class AdminController {
 
     @Autowired
     private CollectFeeDOA collectFeeDOA;
+    @Autowired
+    private BusStudentRepository busStudentRepository;
 
 
     private final User radiantUser = new User("radiantUser", "radiant123");
@@ -69,7 +71,7 @@ public class AdminController {
             parentRepository.save(parent); // Save the new parent
         }
 
-        // Now that we have the parent (either existing or newly created), create and add the student
+        // Create and add the student
         Student student = new Student();
         student.setStudentName(studentParentDTO.getStudentName());
         student.setDob(studentParentDTO.getDob());
@@ -114,10 +116,29 @@ public class AdminController {
         // Save the parent again to ensure the student is linked in the parent's children list
         parentRepository.save(parent);
 
+        // Handle bus student creation if comesByBus is true
+        if (studentParentDTO.isComesByBus()) {
+            BusDetails busDetails = busDetailsRepository.findByBusNumber(studentParentDTO.getBusNumber());
+            if (busDetails != null) {
+                // Create a BusStudent entity
+                BusStudent busStudent = new BusStudent();
+                busStudent.setStudentName(student.getStudentName());
+                busStudent.setMobileNumber(parent.getPhoneNumber());
+                busStudent.setRemainingBalance(busDetails.getBusFee());
+                busStudent.setBusNumber(studentParentDTO.getBusNumber());
+
+                // Save the bus student
+                busStudentRepository.save(busStudent);
+            } else {
+                return ResponseEntity.badRequest().body("Bus Not Found");
+            }
+        }
+
         log.info("Student added successfully: " + student.getStudentName());
 
         return ResponseEntity.ok("Student and Parent added/linked successfully.");
     }
+
 
 
 
