@@ -2,15 +2,9 @@ package com.dipner.SMS.Controller;
 
 import com.dipner.SMS.DOA.CollectFeeDOA;
 import com.dipner.SMS.DTO.*;
-import com.dipner.SMS.Entity.Parent;
-import com.dipner.SMS.Entity.SchoolClass;
-import com.dipner.SMS.Entity.Student;
-import com.dipner.SMS.Entity.User;
+import com.dipner.SMS.Entity.*;
 import com.dipner.SMS.Logs.CollectFeeLog;
-import com.dipner.SMS.Repository.CollectFeeLogRepository;
-import com.dipner.SMS.Repository.ParentRepository;
-import com.dipner.SMS.Repository.SchoolClassRepository;
-import com.dipner.SMS.Repository.StudentRepository;
+import com.dipner.SMS.Repository.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +25,8 @@ public class AdminController {
 
     static Log log = LogFactory.getLog(Student.class.getName());
     @Autowired
+    private BusDetailsRepository busDetailsRepository;
+    @Autowired
     private CollectFeeLogRepository collectFeeLogRepository;
 
     @Autowired
@@ -44,6 +40,8 @@ public class AdminController {
 
     @Autowired
     private CollectFeeDOA collectFeeDOA;
+    @Autowired
+    private BusStudentRepository busStudentRepository;
 
 
     private final User radiantUser = new User("radiantUser", "radiant123");
@@ -73,7 +71,7 @@ public class AdminController {
             parentRepository.save(parent); // Save the new parent
         }
 
-        // Now that we have the parent (either existing or newly created), create and add the student
+        // Create and add the student
         Student student = new Student();
         student.setStudentName(studentParentDTO.getStudentName());
         student.setDob(studentParentDTO.getDob());
@@ -118,10 +116,29 @@ public class AdminController {
         // Save the parent again to ensure the student is linked in the parent's children list
         parentRepository.save(parent);
 
+        // Handle bus student creation if comesByBus is true
+        if (studentParentDTO.isComesByBus()) {
+            BusDetails busDetails = busDetailsRepository.findByBusNumber(studentParentDTO.getBusNumber());
+            if (busDetails != null) {
+                // Create a BusStudent entity
+                BusStudent busStudent = new BusStudent();
+                busStudent.setStudentName(student.getStudentName());
+                busStudent.setMobileNumber(parent.getPhoneNumber());
+                busStudent.setRemainingBalance(busDetails.getBusFee());
+                busStudent.setBusNumber(studentParentDTO.getBusNumber());
+
+                // Save the bus student
+                busStudentRepository.save(busStudent);
+            } else {
+                return ResponseEntity.badRequest().body("Bus Not Found");
+            }
+        }
+
         log.info("Student added successfully: " + student.getStudentName());
 
         return ResponseEntity.ok("Student and Parent added/linked successfully.");
     }
+
 
 
 
@@ -385,6 +402,15 @@ public class AdminController {
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
+
+
+    // POST method to add BusDetails with ResponseEntity.ok
+    @PostMapping("/addBusDetails")
+    public ResponseEntity<BusDetails> addBusDetails(@RequestBody BusDetails busDetails) {
+        BusDetails savedBusDetails = busDetailsRepository.save(busDetails);
+        return ResponseEntity.ok(savedBusDetails); // Returning ResponseEntity.ok
+    }
+
 }
 
 
