@@ -14,8 +14,12 @@ public class StudentParentDTO {
     private String parentPhoneNumber;
     private String parentAddress;
 
-    // Getters and setters
+    // New fields for bus details
+    private boolean usesBus;
+    private String busNumber;
+    private double busFee;
 
+    // Getters and setters
 
     public String getStudentName() {
         return studentName;
@@ -87,5 +91,31 @@ public class StudentParentDTO {
 
     public void setParentAddress(String parentAddress) {
         this.parentAddress = parentAddress;
+    }
+
+    // Getters and setters for new bus details fields
+
+    public boolean isUsesBus() {
+        return usesBus;
+    }
+
+    public void setUsesBus(boolean usesBus) {
+        this.usesBus = usesBus;
+    }
+
+    public String getBusNumber() {
+        return busNumber;
+    }
+
+    public void setBusNumber(String busNumber) {
+        this.busNumber = busNumber;
+    }
+
+    public double getBusFee() {
+        return busFee;
+    }
+
+    public void setBusFee(double busFee) {
+        this.busFee = busFee;
     }
 }

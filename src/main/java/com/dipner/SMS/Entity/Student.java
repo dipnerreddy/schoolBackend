@@ -9,15 +9,18 @@ public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String studentName;
     private LocalDate dob;
     private int admissionYear;
     private String currentClass;
     private boolean stillStudying;
     private String gender;
-    private int age;  // New field for age
-    private double fee;  // New field for fee
+    private int age;  // Field for age
+    private double fee;  // Field for fee
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean usesBus;
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
@@ -27,31 +30,27 @@ public class Student {
     @JoinColumn(name = "class_id", referencedColumnName = "id")
     private SchoolClass schoolClass;
 
+    // Constructors, getters, and setters
 
-
-
-
-    // Getters and Setters
-
-    public double getFee() {
-        return fee;
+    public Student() {
     }
 
-    public void setFee(double fee) {
+    public Student(Long id, String studentName, LocalDate dob, int admissionYear, String currentClass,
+                   boolean stillStudying, String gender, int age, double fee, boolean usesBus,
+                   Parent parent, SchoolClass schoolClass) {
+        this.id = id;
+        this.studentName = studentName;
+        this.dob = dob;
+        this.admissionYear = admissionYear;
+        this.currentClass = currentClass;
+        this.stillStudying = stillStudying;
+        this.gender = gender;
+        this.age = age;
         this.fee = fee;
-    }
-
-
-    // Existing getters and setters
-
-    public SchoolClass getSchoolClass() {
-        return schoolClass;
-    }
-
-    public void setSchoolClass(SchoolClass schoolClass) {
+        this.usesBus = usesBus;
+        this.parent = parent;
         this.schoolClass = schoolClass;
     }
-
 
     public Long getId() {
         return id;
@@ -60,9 +59,6 @@ public class Student {
     public void setId(Long id) {
         this.id = id;
     }
-
-
-
 
     public String getStudentName() {
         return studentName;
@@ -120,11 +116,35 @@ public class Student {
         this.age = age;
     }
 
+    public double getFee() {
+        return fee;
+    }
+
+    public void setFee(double fee) {
+        this.fee = fee;
+    }
+
+    public boolean isUsesBus() {
+        return usesBus;
+    }
+
+    public void setUsesBus(boolean usesBus) {
+        this.usesBus = usesBus;
+    }
+
     public Parent getParent() {
         return parent;
     }
 
     public void setParent(Parent parent) {
         this.parent = parent;
+    }
+
+    public SchoolClass getSchoolClass() {
+        return schoolClass;
+    }
+
+    public void setSchoolClass(SchoolClass schoolClass) {
+        this.schoolClass = schoolClass;
     }
 }

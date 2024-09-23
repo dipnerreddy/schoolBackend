@@ -2,15 +2,10 @@ package com.dipner.SMS.Controller;
 
 import com.dipner.SMS.DOA.CollectFeeDOA;
 import com.dipner.SMS.DTO.*;
-import com.dipner.SMS.Entity.Parent;
-import com.dipner.SMS.Entity.SchoolClass;
-import com.dipner.SMS.Entity.Student;
-import com.dipner.SMS.Entity.User;
+import com.dipner.SMS.Entity.*;
 import com.dipner.SMS.Logs.CollectFeeLog;
-import com.dipner.SMS.Repository.CollectFeeLogRepository;
-import com.dipner.SMS.Repository.ParentRepository;
-import com.dipner.SMS.Repository.SchoolClassRepository;
-import com.dipner.SMS.Repository.StudentRepository;
+import com.dipner.SMS.Repository.*;
+import jakarta.transaction.Transactional;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +40,10 @@ public class AdminController {
     @Autowired
     private CollectFeeDOA collectFeeDOA;
 
+    @Autowired
+    private BusDetailsRepository busDetailsRepository;
+    @Autowired
+    private BusStudentRepository busStudentRepository;
 
     private final User radiantUser = new User("radiantUser", "radiant123");
 
@@ -58,138 +57,107 @@ public class AdminController {
         }
     }
 
+
+
     @PostMapping("/addStudent")
+    @Transactional
     public ResponseEntity<String> addStudentWithParent(@RequestBody StudentParentDTO studentParentDTO) {
-        // Check if the parent already exists by phone number
-        String parentPhoneNumber = studentParentDTO.getParentPhoneNumber();
-        Parent parent = parentRepository.findByPhoneNumber(parentPhoneNumber);
+        try {
+            // Check if the parent already exists by phone number
+            String parentPhoneNumber = studentParentDTO.getParentPhoneNumber();
+            Parent parent = parentRepository.findByPhoneNumber(parentPhoneNumber);
 
-        if (parent == null) {
-            // Parent does not exist, create a new parent
-            parent = new Parent();
-            parent.setParentName(studentParentDTO.getParentName());
-            parent.setPhoneNumber(parentPhoneNumber);
-            parent.setAddress(studentParentDTO.getParentAddress());
-            parentRepository.save(parent); // Save the new parent
-        }
+            if (parent == null) {
+                // Create a new parent if not found
+                parent = new Parent();
+                parent.setParentName(studentParentDTO.getParentName());
+                parent.setPhoneNumber(parentPhoneNumber);
+                parent.setAddress(studentParentDTO.getParentAddress());
+                parentRepository.save(parent);
+            }
 
-        // Now that we have the parent (either existing or newly created), create and add the student
-        Student student = new Student();
-        student.setStudentName(studentParentDTO.getStudentName());
-        student.setDob(studentParentDTO.getDob());
-        student.setAdmissionYear(studentParentDTO.getAdmissionYear());
-        student.setCurrentClass(studentParentDTO.getCurrentClass());
-        student.setStillStudying(studentParentDTO.isStillStudying());
-        student.setGender(studentParentDTO.getGender());
+            // Create and add the student
+            Student student = new Student();
+            student.setStudentName(studentParentDTO.getStudentName());
+            student.setDob(studentParentDTO.getDob());
+            student.setAdmissionYear(studentParentDTO.getAdmissionYear());
+            student.setCurrentClass(studentParentDTO.getCurrentClass());
+            student.setStillStudying(studentParentDTO.isStillStudying());
+            student.setGender(studentParentDTO.getGender());
 
-        // Calculate the student's age based on DOB
-        LocalDate dob = studentParentDTO.getDob();
-        if (dob != null) {
-            int age = Period.between(dob, LocalDate.now()).getYears();
-            student.setAge(age);
-        } else {
-            student.setAge(0);
-        }
+            // Calculate and set the student's age based on DOB
+            LocalDate dob = studentParentDTO.getDob();
+            if (dob != null) {
+                student.setAge(Period.between(dob, LocalDate.now()).getYears());
+            } else {
+                student.setAge(0);
+            }
 
-        // Associate the student with the parent
-        student.setParent(parent);
+            // Associate the student with the parent
+            student.setParent(parent);
 
-        // Find the class by class name and associate it with the student
-        SchoolClass schoolClass = schoolClassRepository.findByClassName(studentParentDTO.getCurrentClass());
-        if (schoolClass != null) {
-            student.setSchoolClass(schoolClass); // Assign school class to student
+            // Find the class by class name and associate it with the student
+            SchoolClass schoolClass = schoolClassRepository.findByClassName(studentParentDTO.getCurrentClass());
+            if (schoolClass == null) {
+                return ResponseEntity.badRequest().body("Class Not Found");
+            }
+
+            student.setSchoolClass(schoolClass);
             student.setFee(schoolClass.getFees());
+
+            // Update school class details
             schoolClass.setTotalStrength(schoolClass.getTotalStrength() + 1);
             schoolClass.setTotalPendingFee(schoolClass.getTotalPendingFee() + schoolClass.getFees());
-            schoolClassRepository.save(schoolClass); // Save updated class
-        } else {
-            return ResponseEntity.badRequest().body("Class Not Found");
+            schoolClassRepository.save(schoolClass);
+
+            // Save the student before processing bus details
+            studentRepository.save(student);
+
+            // Handle bus-related logic if the student uses the bus
+            if (studentParentDTO.isUsesBus()) {
+                String busNumber = studentParentDTO.getBusNumber();
+
+                // Validate bus number
+                BusDetails busDetails = busDetailsRepository.findByBusNumber(busNumber);
+                if (busDetails == null) {
+                    return ResponseEntity.badRequest().body("Bus number not matched. Please provide a valid bus number.");
+                }
+
+                // Create BusStudent association
+                BusStudent busStudent = new BusStudent();
+                busStudent.setBusNumber(busNumber);
+                busStudent.setStudentName(student.getStudentName());
+                busStudent.setMobileNumber(parent.getPhoneNumber());
+                busStudent.setBalanceFee(student.getFee());
+                busStudentRepository.save(busStudent);
+
+                // Update bus details
+                busDetails.setTotalStudents(busDetails.getTotalStudents() + 1);
+                busDetails.setTotalPendingFee(busDetails.getTotalPendingFee() + student.getFee());
+                busDetailsRepository.save(busDetails);
+
+                student.setUsesBus(true);
+            } else {
+                student.setUsesBus(false);
+            }
+
+            // Add the student to the parent's list of children if not already added
+            if (parent.getChildren() == null) {
+                parent.setChildren(new ArrayList<>());
+            }
+            parent.getChildren().add(student);
+
+            // Save parent after associating the student
+            parentRepository.save(parent);
+
+            log.info("Student added successfully: " + student.getStudentName());
+            return ResponseEntity.ok("Student and Parent added/linked successfully with bus details.");
+
+        } catch (Exception e) {
+            log.error("Error adding student: " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while adding the student.");
         }
-
-        // Save the student entity
-        studentRepository.save(student);
-
-        // If the parent is new, also add the student to the parent's list of children
-        if (parent.getChildren() == null) {
-            parent.setChildren(new ArrayList<>());
-        }
-        parent.getChildren().add(student);
-
-        // Save the parent again to ensure the student is linked in the parent's children list
-        parentRepository.save(parent);
-
-        log.info("Student added successfully: " + student.getStudentName());
-
-        return ResponseEntity.ok("Student and Parent added/linked successfully.");
     }
-
-
-
-
-
-
-    // Endpoint to add a new parent
-    // Endpoint to add a new parent
-//    @PostMapping("/addParent")
-//    public ResponseEntity<String> addParent(@RequestBody Parent parent) {
-//        // Check if the parent already exists by phone number
-//        Parent existingParent = parentRepository.findByPhoneNumber(parent.getPhoneNumber());
-//        if (existingParent != null) {
-//            return ResponseEntity.badRequest().body("A parent is already present with this phone number.");
-//        }
-//
-//        // Save the new parent
-//        parentRepository.save(parent);
-//        return ResponseEntity.ok("Parent added successfully." +parent.getId());
-//    }
-
-
-    // Endpoint to add a student
-//    @PostMapping("/addStudent")
-//    public ResponseEntity<String> addStudent(@RequestBody StudentParentDTO studentParentDTO) {
-//        Long parentId = studentParentDTO.getParentId();
-//        Parent parent = parentRepository.findById(parentId).orElse(null);
-//        if (parent == null) {
-//            return ResponseEntity.badRequest().body("Parent Not Found");
-//        }
-//
-//        Student student = new Student();
-//        student.setStudentName(studentParentDTO.getStudentName());
-//        student.setDob(studentParentDTO.getDob());
-//        student.setAdmissionYear(studentParentDTO.getAdmissionYear());
-//        student.setCurrentClass(studentParentDTO.getCurrentClass());
-//        student.setStillStudying(studentParentDTO.isStillStudying());
-//        student.setGender(studentParentDTO.getGender());
-//
-//        // Calculate age based on DOB
-//        LocalDate dob = studentParentDTO.getDob();
-//        if (dob != null) {
-//            int age = Period.between(dob, LocalDate.now()).getYears();
-//            student.setAge(age);
-//        } else {
-//            student.setAge(0);
-//        }
-//
-//        // Set parent and class details
-//        student.setParent(parent);
-//
-//        SchoolClass schoolClass = schoolClassRepository.findByClassName(studentParentDTO.getCurrentClass());
-//        if (schoolClass != null) {
-//            student.setSchoolClass(schoolClass); // Assign school class to student
-//            student.setFee(schoolClass.getFees());
-//            schoolClass.setTotalStrength(schoolClass.getTotalStrength() + 1);
-//            schoolClass.setTotalPendingFee(schoolClass.getTotalPendingFee() + schoolClass.getFees());
-//            schoolClassRepository.save(schoolClass); // Save updated class
-//        } else {
-//            return ResponseEntity.badRequest().body("Class Not Found");
-//        }
-//
-//        // Save the student
-//        studentRepository.save(student);
-//        log.info("Student added successfully: " + student.getStudentName());
-//
-//        return ResponseEntity.ok("Student Saved Successfully");
-//    }
 
 
     // Endpoint to create a class
@@ -384,6 +352,19 @@ public class AdminController {
     @GetMapping("/students")
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
+    }
+
+
+    @PostMapping("/addBus")
+    public ResponseEntity<String> addBus(@RequestBody BusDetails busDetails) {
+        // Check if the bus already exists
+        if (busDetailsRepository.findByBusNumber(busDetails.getBusNumber()) != null) {
+            return ResponseEntity.badRequest().body("Bus with this number already exists.");
+        }
+
+        // Save the new bus details
+        busDetailsRepository.save(busDetails);
+        return ResponseEntity.ok("Bus details added successfully.");
     }
 }
 
