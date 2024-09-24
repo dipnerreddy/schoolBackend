@@ -5,47 +5,34 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 @Entity
-public class CollectFeeLog {
+public class CollectBusFeeLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String studentName;
-    private String phoneNumber;
+    private String mobileNumber;
     private double amountPaid;
     private double totalBalance;
-    private String dateTime;
-    private String paymentMode;
+    private String dateTime; // You can set this when creating the log
+    private String paymentMode; // Include payment mode
 
     // Constructor
-
-
-    public CollectFeeLog() {
-    }
-
-    public CollectFeeLog(String studentName, String phoneNumber, double amountPaid, double totalBalance, String paymentMode, String dateTime) {
+    public CollectBusFeeLog(String studentName, String mobileNumber, double amountPaid, double totalBalance, String paymentMode, String dateTime) {
         this.studentName = studentName;
-        this.phoneNumber = phoneNumber;
+        this.mobileNumber = mobileNumber;
         this.amountPaid = amountPaid;
         this.totalBalance = totalBalance;
         this.paymentMode = paymentMode;
-        this.dateTime = dateTime; // Set the dateTime
+        this.dateTime = dateTime;
     }
 
+    // Default constructor
+    public CollectBusFeeLog() {}
 
-
-    public String getPaymentMode() {
-        return paymentMode;
-    }
-
-    public void setPaymentMode(String paymentMode) {
-        this.paymentMode = paymentMode;
-    }
-
+    // Getters and setters
+    // ...
 
     public Long getId() {
         return id;
@@ -63,12 +50,12 @@ public class CollectFeeLog {
         this.studentName = studentName;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
+    public String getMobileNumber() {
+        return mobileNumber;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setMobileNumber(String mobileNumber) {
+        this.mobileNumber = mobileNumber;
     }
 
     public double getAmountPaid() {
@@ -93,5 +80,13 @@ public class CollectFeeLog {
 
     public void setDateTime(String dateTime) {
         this.dateTime = dateTime;
+    }
+
+    public String getPaymentMode() {
+        return paymentMode;
+    }
+
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode;
     }
 }
