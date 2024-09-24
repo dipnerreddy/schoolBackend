@@ -4,6 +4,7 @@ public class CollectBusFeeDTO {
     private String studentName;
     private String mobileNumber;
     private double amountPaying;
+    private String paymentMode; // Add this field for payment method
 
     // Getters and Setters
     public String getStudentName() {
@@ -28,5 +29,13 @@ public class CollectBusFeeDTO {
 
     public void setAmountPaying(double amountPaying) {
         this.amountPaying = amountPaying;
+    }
+
+    public String getPaymentMode() {
+        return paymentMode; // Getter for paymentMode
+    }
+
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode; // Setter for paymentMode
     }
 }
