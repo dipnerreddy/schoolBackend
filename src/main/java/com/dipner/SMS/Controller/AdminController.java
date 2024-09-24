@@ -418,6 +418,104 @@ public class AdminController {
         return ResponseEntity.ok(savedBusDetails); // Returning ResponseEntity.ok
     }
 
+
+    @PostMapping("/checkBusFee")
+    public ResponseEntity<?> checkBusFee(@RequestBody CheckBusFeeDTO checkBusFeeDTO) {
+        BusStudent busStudent = busStudentRepository.findByStudentNameAndMobileNumber(
+                checkBusFeeDTO.getStudentName(),
+                checkBusFeeDTO.getMobileNumber()
+        );
+
+        if (busStudent == null) {
+            return ResponseEntity.badRequest().body("Bus Student Not Found");
+        }
+
+        double remainingBalance = busStudent.getRemainingBalance();
+        return ResponseEntity.ok(Collections.singletonMap("remainingBalance", remainingBalance));
+    }
+
+    @PostMapping("/collectBusFee")
+    public ResponseEntity<?> collectBusFee(@RequestBody CollectBusFeeDTO collectBusFeeDTO) {
+        // Find the BusStudent by student name and mobile number
+        BusStudent busStudent = busStudentRepository.findByStudentNameAndMobileNumber(
+                collectBusFeeDTO.getStudentName(),
+                collectBusFeeDTO.getMobileNumber()
+        );
+
+        if (busStudent == null) {
+            return ResponseEntity.badRequest().body("Bus Student Not Found");
+        }
+
+        // Get remaining balance and check if the amount to be paid is valid
+        double remainingBalance = busStudent.getRemainingBalance();
+        if (collectBusFeeDTO.getAmountPaying() > remainingBalance) {
+            return ResponseEntity.badRequest().body("Amount exceeds the remaining balance");
+        }
+
+        // Calculate new balance and update BusStudent entity
+        double newBalance = remainingBalance - collectBusFeeDTO.getAmountPaying();
+        busStudent.setRemainingBalance(newBalance);
+        busStudentRepository.save(busStudent); // Save updated BusStudent
+
+        // Find the corresponding BusDetails entity using the bus number
+        BusDetails busDetails = busDetailsRepository.findByBusNumber(busStudent.getBusNumber());
+        if (busDetails == null) {
+            return ResponseEntity.badRequest().body("Bus details not found for the student");
+        }
+
+        // Update the total pending fee in BusDetails
+        double updatedTotalPendingFee = busDetails.getTotalPendingFee() - collectBusFeeDTO.getAmountPaying();
+        busDetails.setTotalPendingFee(updatedTotalPendingFee);
+        busDetailsRepository.save(busDetails); // Save updated BusDetails
+
+        // Return a success message
+        return ResponseEntity.ok("Payment was successful");
+    }
+
+    @GetMapping("/busBalances")
+    public ResponseEntity<List<BusBalanceDTO>> getBusBalances() {
+        List<BusDetails> buses = busDetailsRepository.findAll();
+        List<BusBalanceDTO> busBalances = new ArrayList<>();
+
+        for (BusDetails busDetails : buses) {
+            double remainingBalance = busDetails.getTotalPendingFee(); // Assuming totalPendingFee is the remaining balance
+            busBalances.add(new BusBalanceDTO(busDetails.getBusNumber(), remainingBalance));
+        }
+
+        return ResponseEntity.ok(busBalances);
+    }
+
+
+    @GetMapping("/studentsByBus")
+    public ResponseEntity<?> getStudentsByBus(@RequestParam String busNumber) {
+        // Find the bus by busNumber
+        BusDetails busDetails = busDetailsRepository.findByBusNumber(busNumber);
+        if (busDetails == null) {
+            return ResponseEntity.badRequest().body("Bus Not Found");
+        }
+
+        // Get all students associated with the bus
+        List<BusStudent> busStudents = busStudentRepository.findByBusNumber(busNumber);
+
+        // If no students found, return an empty list
+        if (busStudents.isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        // Prepare the list of DTOs to return
+        List<StudentBusFeeInfoDTO> studentBusFeeInfoList = busStudents.stream()
+                .map(busStudent -> {
+                    return new StudentBusFeeInfoDTO(
+                            busStudent.getStudentName(),
+                            busStudent.getMobileNumber(),  // Get student's phone number
+                            busStudent.getRemainingBalance() // Remaining bus balance
+                    );
+                }).toList();
+
+        return ResponseEntity.ok(studentBusFeeInfoList);
+    }
+
+
 }
 
 
