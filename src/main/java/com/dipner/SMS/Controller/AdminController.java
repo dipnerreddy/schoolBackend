@@ -366,111 +366,14 @@ public class AdminController {
         );
 
         if (busStudent == null) {
-            return ResponseEntity.badRequest().body("Bus Student Not Found");
+            // Return a 200 status with a message instead of bad request
+            return ResponseEntity.ok(Collections.singletonMap("message", "Bus Student Not Found"));
         }
 
         double remainingBalance = busStudent.getRemainingBalance();
         return ResponseEntity.ok(Collections.singletonMap("remainingBalance", remainingBalance));
     }
 
-//    @PostMapping("/collectBusFee")
-//    public ResponseEntity<?> collectBusFee(@RequestBody CollectBusFeeDTO collectBusFeeDTO) {
-//        // Find the BusStudent by student name and mobile number
-//        BusStudent busStudent = busStudentRepository.findByStudentNameAndMobileNumber(
-//                collectBusFeeDTO.getStudentName(),
-//                collectBusFeeDTO.getMobileNumber()
-//        );
-//
-//        if (busStudent == null) {
-//            return ResponseEntity.badRequest().body("Bus Student Not Found");
-//        }
-//
-//        // Get remaining balance and check if the amount to be paid is valid
-//        double remainingBalance = busStudent.getRemainingBalance();
-//        if (collectBusFeeDTO.getAmountPaying() > remainingBalance) {
-//            return ResponseEntity.badRequest().body("Amount exceeds the remaining balance");
-//        }
-//
-//        // Calculate new balance and update BusStudent entity
-//        double newBalance = remainingBalance - collectBusFeeDTO.getAmountPaying();
-//        busStudent.setRemainingBalance(newBalance);
-//        busStudentRepository.save(busStudent); // Save updated BusStudent
-//
-//        // Find the corresponding BusDetails entity using the bus number
-//        BusDetails busDetails = busDetailsRepository.findByBusNumber(busStudent.getBusNumber());
-//        if (busDetails == null) {
-//            return ResponseEntity.badRequest().body("Bus details not found for the student");
-//        }
-//
-//        // Update the total pending fee in BusDetails
-//        double updatedTotalPendingFee = busDetails.getTotalPendingFee() - collectBusFeeDTO.getAmountPaying();
-//        busDetails.setTotalPendingFee(updatedTotalPendingFee);
-//        busDetailsRepository.save(busDetails); // Save updated BusDetails
-//
-//        // Create and save bus fee collection log
-//        CollectBusFeeLog busFeeLog = new CollectBusFeeLog(
-//                busStudent.getStudentName(),
-//                busStudent.getMobileNumber(),
-//                collectBusFeeDTO.getAmountPaying(),
-//                newBalance,
-//                collectBusFeeDTO.getPaymentMode(),
-//                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) // Example for dateTime
-//        );
-//        collectBusFeeLogRepository.save(busFeeLog); // Save log
-//
-//        // Return a success message
-//        return ResponseEntity.ok("Payment was successful");
-//    }
-
-
-//    @PostMapping("/collectBusFee")
-//    public ResponseEntity<?> collectBusFee(@RequestBody CollectBusFeeDTO collectBusFeeDTO) {
-//        // Find the BusStudent by student name and mobile number
-//        BusStudent busStudent = busStudentRepository.findByStudentNameAndMobileNumber(
-//                collectBusFeeDTO.getStudentName(),
-//                collectBusFeeDTO.getMobileNumber()
-//        );
-//
-//        if (busStudent == null) {
-//            return ResponseEntity.badRequest().body(Map.of("message", "Bus Student Not Found"));
-//        }
-//
-//        // Get remaining balance and check if the amount to be paid is valid
-//        double remainingBalance = busStudent.getRemainingBalance();
-//        if (collectBusFeeDTO.getAmountPaying() > remainingBalance) {
-//            return ResponseEntity.badRequest().body(Map.of("message", "Amount exceeds the remaining balance"));
-//        }
-//
-//        // Calculate new balance and update BusStudent entity
-//        double newBalance = remainingBalance - collectBusFeeDTO.getAmountPaying();
-//        busStudent.setRemainingBalance(newBalance);
-//        busStudentRepository.save(busStudent); // Save updated BusStudent
-//
-//        // Find the corresponding BusDetails entity using the bus number
-//        BusDetails busDetails = busDetailsRepository.findByBusNumber(busStudent.getBusNumber());
-//        if (busDetails == null) {
-//            return ResponseEntity.badRequest().body(Map.of("message", "Bus details not found for the student"));
-//        }
-//
-//        // Update the total pending fee in BusDetails
-//        double updatedTotalPendingFee = busDetails.getTotalPendingFee() - collectBusFeeDTO.getAmountPaying();
-//        busDetails.setTotalPendingFee(updatedTotalPendingFee);
-//        busDetailsRepository.save(busDetails); // Save updated BusDetails
-//
-//        // Create and save bus fee collection log
-//        CollectBusFeeLog busFeeLog = new CollectBusFeeLog(
-//                busStudent.getStudentName(),
-//                busStudent.getMobileNumber(),
-//                collectBusFeeDTO.getAmountPaying(),
-//                newBalance,
-//                collectBusFeeDTO.getPaymentMode(), // Now this works
-//                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) // Example for dateTime
-//        );
-//        collectBusFeeLogRepository.save(busFeeLog); // Save log
-//
-//        // Return a success message in JSON format
-//        return ResponseEntity.ok(Map.of("message", "Payment was successful"));
-//    }
 
     @PostMapping("/collectBusFee")
     public ResponseEntity<?> collectBusFee(@RequestBody CollectBusFeeDTO collectBusFeeDTO) {
